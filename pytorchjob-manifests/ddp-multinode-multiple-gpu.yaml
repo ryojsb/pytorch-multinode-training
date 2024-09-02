@@ -11,14 +11,14 @@ spec:
         metadata:
           annotations:
             k8s.v1.cni.cncf.io/networks:
-              tenant-a-network-vlan501,
-              tenant-a-network-vlan502,
-              tenant-a-network-vlan503,
-              tenant-a-network-vlan504,
-              tenant-a-network-vlan505,
-              tenant-a-network-vlan506,
-              tenant-a-network-vlan507,
-              tenant-a-network-vlan508
+              sriov-vf-network-vlan501,
+              sriov-vf-network-vlan502,
+              sriov-vf-network-vlan503,
+              sriov-vf-network-vlan504,
+              sriov-vf-network-vlan505,
+              sriov-vf-network-vlan506,
+              sriov-vf-network-vlan507,
+              sriov-vf-network-vlan508
         spec:
           containers:
             - name: pytorch
@@ -81,14 +81,14 @@ spec:
         metadata:
           annotations:
             k8s.v1.cni.cncf.io/networks:
-              tenant-a-network-vlan501,
-              tenant-a-network-vlan502,
-              tenant-a-network-vlan503,
-              tenant-a-network-vlan504,
-              tenant-a-network-vlan505,
-              tenant-a-network-vlan506,
-              tenant-a-network-vlan507,
-              tenant-a-network-vlan508
+              sriov-vf-network-vlan501,
+              sriov-vf-network-vlan502,
+              sriov-vf-network-vlan503,
+              sriov-vf-network-vlan504,
+              sriov-vf-network-vlan505,
+              sriov-vf-network-vlan506,
+              sriov-vf-network-vlan507,
+              sriov-vf-network-vlan508
         spec:
           containers:
             - name: pytorch
