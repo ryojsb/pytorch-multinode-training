@@ -1,0 +1,88 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: pytorch-test
+spec:
+ replicas: 2
+ selector:
+   matchLabels:
+     app: pytorch-test
+ template:
+   metadata:
+     annotations:
+       k8s.v1.cni.cncf.io/networks:
+          tenant-a-network-vlan501,
+          tenant-a-network-vlan502,
+          tenant-a-network-vlan503,
+          tenant-a-network-vlan504,
+          tenant-a-network-vlan505,
+          tenant-a-network-vlan506,
+          tenant-a-network-vlan507,
+          tenant-a-network-vlan508
+     labels:
+       app: pytorch-test
+   spec:
+     affinity:
+       podAntiAffinity:
+         requiredDuringSchedulingIgnoredDuringExecution:
+         - labelSelector:
+             matchExpressions:
+             - key: app
+               operator: In
+               values:
+               - pytorch-test
+           topologyKey: "kubernetes.io/hostname"
+     containers:
+     - name: test
+       image: <Local Repogitory>/pytorch-ddp:ver1.1.0
+       ports:
+       - containerPort: 80
+       command: ["/bin/bash", "-c", "sleep inf"]
+       securityContext:
+         capabilities:
+           add: [ "IPC_LOCK"]
+       env:
+       - name: NCCL_DEBUG
+         value: TRACE
+       - name: NCCL_SOCKET_IFNAME
+         value: eth0  # net
+       - name: NCCL_IB_HCA
+         value: mlx5
+       - name: NCCL_IB_GID_INDEX
+         value: "3"
+       - name: NCCL_SOCKET_FAMILY
+         value: AF_INET
+       - name: EPOCHS
+         value: "300"
+       - name: BATCH_SIZE
+         value: "128"
+       - name: LEARNING_RATE
+         value: "0.01"
+       - name: RANDOM_SEED
+         value: "0"
+       resources:
+         limits:
+           nvidia.com/gpu: "6"
+           nvidia.com/mellanoxnic-1: "1"
+           nvidia.com/mellanoxnic-2: "1"
+           nvidia.com/mellanoxnic-3: "1"
+           nvidia.com/mellanoxnic-4: "1"
+           nvidia.com/mellanoxnic-5: "1"
+           nvidia.com/mellanoxnic-6: "1"
+           nvidia.com/mellanoxnic-7: "1"
+           nvidia.com/mellanoxnic-8: "1"
+       volumeMounts:
+       - mountPath: "/tmp/data"
+         name: task-pv-storage
+       - mountPath: /dev/shm
+         name: dshm
+     imagePullSecrets:
+     - name: regcred
+     volumes:
+     - name: task-pv-storage
+       persistentVolumeClaim:
+         claimName: test-nfs
+     - name: dshm
+       emptyDir:
+         medium: Memory

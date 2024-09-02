@@ -1,0 +1,147 @@
+apiVersion: "kubeflow.org/v1"
+kind: PyTorchJob
+metadata:
+  name: kubeflow-pytorch-training
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        metadata:
+          annotations:
+            k8s.v1.cni.cncf.io/networks:
+              tenant-a-network-vlan501,
+              tenant-a-network-vlan502,
+              tenant-a-network-vlan503,
+              tenant-a-network-vlan504,
+              tenant-a-network-vlan505,
+              tenant-a-network-vlan506,
+              tenant-a-network-vlan507,
+              tenant-a-network-vlan508
+        spec:
+          containers:
+            - name: pytorch
+              image: <Local Repogitory>/pytorch-mnist-ddp:ver1.1.0
+              env:
+              - name: NCCL_DEBUG
+                value: TRACE
+              - name: NCCL_SOCKET_IFNAME
+                value: eth0
+              - name: NCCL_SOCKET_FAMILY
+                value: AF_INET
+              - name: NCCL_IB_HCA
+                value: "mlx5"
+              - name: EPOCHS
+                value: "300"
+              - name: BATCH_SIZE
+                value: "128"
+              - name: LEARNING_RATE
+                value: "0.01"
+              - name: RANDOM_SEED
+                value: "0"
+              resources:
+                limits:
+                  nvidia.com/gpu: "8"
+                  nvidia.com/mellanoxnic-1: "1"
+                  nvidia.com/mellanoxnic-2: "1"
+                  nvidia.com/mellanoxnic-3: "1"
+                  nvidia.com/mellanoxnic-4: "1"
+                  nvidia.com/mellanoxnic-5: "1"
+                  nvidia.com/mellanoxnic-6: "1"
+                  nvidia.com/mellanoxnic-7: "1"
+                  nvidia.com/mellanoxnic-8: "1"
+              command:
+              - "torchrun"
+              args:
+              - "--nproc_per_node=6"
+              - "--nnodes=$(WORLD_SIZE)"
+              - "--node_rank=$(RANK)"
+              - "--master_addr=$(MASTER_ADDR)"
+              - "--master_port=$(MASTER_PORT)"
+              - "/opt/pytorch-mnist/ddp.py"
+              volumeMounts:
+              - mountPath: "/tmp/data"
+                name: task-pv-storage
+              - mountPath: /dev/shm
+                name: dshm
+          imagePullSecrets:
+          - name: regcred
+          volumes:
+          - name: task-pv-storage
+            persistentVolumeClaim:
+              claimName: test-nfs
+          - name: dshm
+            emptyDir:
+                medium: Memory
+    Worker:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        metadata:
+          annotations:
+            k8s.v1.cni.cncf.io/networks:
+              tenant-a-network-vlan501,
+              tenant-a-network-vlan502,
+              tenant-a-network-vlan503,
+              tenant-a-network-vlan504,
+              tenant-a-network-vlan505,
+              tenant-a-network-vlan506,
+              tenant-a-network-vlan507,
+              tenant-a-network-vlan508
+        spec:
+          containers:
+            - name: pytorch
+              image: <Local Repogitory>/pytorch-mnist-ddp:ver1.1.0
+              imagePullPolicy: Never
+              env:
+              - name: NCCL_DEBUG
+                value: TRACE
+              - name: NCCL_SOCKET_IFNAME
+                value: eth0
+              - name: NCCL_SOCKET_FAMILY
+                value: AF_INET
+              - name: NCCL_IB_HCA
+                value: "mlx5"
+              - name: EPOCHS
+                value: "300"
+              - name: BATCH_SIZE
+                value: "128"
+              - name: LEARNING_RATE
+                value: "0.01"
+              - name: RANDOM_SEED
+                value: "0"
+              resources:
+                limits:
+                  nvidia.com/gpu: "8"
+                  nvidia.com/mellanoxnic-1: "1"
+                  nvidia.com/mellanoxnic-2: "1"
+                  nvidia.com/mellanoxnic-3: "1"
+                  nvidia.com/mellanoxnic-4: "1"
+                  nvidia.com/mellanoxnic-5: "1"
+                  nvidia.com/mellanoxnic-6: "1"
+                  nvidia.com/mellanoxnic-7: "1"
+                  nvidia.com/mellanoxnic-8: "1"
+              command:
+              - "torchrun"
+              args:
+              - "--nproc_per_node=6"
+              - "--nnodes=$(WORLD_SIZE)"
+              - "--node_rank=$(RANK)"
+              - "--master_addr=$(MASTER_ADDR)"
+              - "--master_port=$(MASTER_PORT)"
+              - "/opt/pytorch-mnist/ddp.py"
+              volumeMounts:
+              - mountPath: "/tmp/data"
+                name: task-pv-storage
+              - mountPath: /dev/shm
+                name: dshm
+          imagePullSecrets:
+          - name: regcred
+          volumes:
+          - name: task-pv-storage
+            persistentVolumeClaim:
+              claimName: test-nfs
+          - name: dshm
+            emptyDir:
+                medium: Memory
